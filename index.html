@@ -26,7 +26,7 @@
             box-shadow: 0px 0px 20px #2A0845;
             text-align: center;
             width: 90%;
-            max-width: 400px;
+            max-width: 420px;
             border: 1px solid #4A1C40;
         }
 
@@ -34,6 +34,22 @@
             color: #A855F7;
             margin-bottom: 5px;
             letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #D8B4E2;
+        }
+
+        .user-info img {
+            width: 30px;
+            border-radius: 50%;
         }
 
         p {
@@ -49,13 +65,25 @@
             font-size: 18px;
             font-family: monospace;
             border-radius: 5px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             color: #FFF;
             word-wrap: break-word;
             min-height: 25px;
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .key-display:hover {
+            border-color: #7B2CBF;
+        }
+
+        .timer {
+            font-size: 13px;
+            color: #A855F7;
+            margin-bottom: 20px;
+            font-weight: bold;
         }
 
         button {
@@ -69,6 +97,10 @@
             cursor: pointer;
             transition: 0.2s;
             width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
         button:hover:not(:disabled) {
@@ -82,6 +114,15 @@
             color: #AAA;
         }
 
+        .google-btn {
+            background-color: #FFF;
+            color: #444;
+        }
+        .google-btn:hover {
+            background-color: #EEE;
+            box-shadow: 0px 0px 10px #FFF;
+        }
+
         .status {
             margin-top: 15px;
             font-size: 13px;
@@ -91,75 +132,190 @@
         .error {
             color: #FF5252;
         }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <h1>DRK EXTERNAL</h1>
-        <p>Complete the steps to get your 24-hour key.</p>
+        
+        <div id="authPanel">
+            <p>Login to generate your 24-hour key.</p>
+            <button class="google-btn" onclick="login()">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20">
+                Login with Google
+            </button>
+        </div>
 
-        <!-- In a real scenario, you can put Linkvertise links here and hide the button until completed -->
-        
-        <div class="key-display" id="keyBox">Click Generate Below</div>
-        
-        <button id="genBtn" onclick="generateKey()">GENERATE KEY</button>
+        <div id="mainPanel" class="hidden">
+            <div class="user-info">
+                <img id="userImg" src="">
+                <span id="userName">User</span>
+                <a href="#" onclick="logout()" style="color: #FF5252; text-decoration: none; font-size: 11px;">Logout</a>
+            </div>
+
+            <div id="noKeySection">
+                <p>Welcome! You can generate 1 key every 24 hours.</p>
+                <button id="genBtn" onclick="handleGenerate()">GENERATE NEW KEY</button>
+            </div>
+
+            <div id="activeKeySection" class="hidden">
+                <p>Your Active Key:</p>
+                <div class="key-display" id="keyBox" title="Click to copy">Connecting...</div>
+                <div class="timer" id="timerText">Expires in: --:--:--</div>
+                <button onclick="copyKey()">COPY KEY</button>
+            </div>
+        </div>
         
         <div class="status" id="statusText"></div>
     </div>
 
-    <script>
-        // Replace this with your actual Firebase Cloud Function URL
-        const FIREBASE_GENERATE_URL = "https://us-central1-YOUR-FIREBASE-PROJECT.cloudfunctions.net/generateKey";
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, set, get, child, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        async function generateKey() {
-            const btn = document.getElementById("genBtn");
-            const box = document.getElementById("keyBox");
-            const status = document.getElementById("statusText");
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyB-fiGhXqie8nAgHhBliKQNFRvnoge4-90",
+            authDomain: "drk-external.firebaseapp.com",
+            projectId: "drk-external",
+            storageBucket: "drk-external.firebasestorage.app",
+            messagingSenderId: "550880608599",
+            appId: "1:550880608599:web:f5e50b8dc1c15483f03e12",
+            databaseURL: "https://drk-external-default-rtdb.asia-southeast1.firebasedatabase.app/"
+        };
 
-            btn.disabled = true;
-            btn.innerText = "GENERATING...";
-            box.innerText = "Connecting to Cloud...";
-            status.innerText = "";
-            status.className = "status";
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        const provider = new GoogleAuthProvider();
 
+        let currentUser = null;
+        let activeTimer = null;
+
+        // UI Elements
+        const authPanel = document.getElementById("authPanel");
+        const mainPanel = document.getElementById("mainPanel");
+        const noKeySection = document.getElementById("noKeySection");
+        const activeKeySection = document.getElementById("activeKeySection");
+        const userImg = document.getElementById("userImg");
+        const userName = document.getElementById("userName");
+        const keyBox = document.getElementById("keyBox");
+        const timerText = document.getElementById("timerText");
+        const statusText = document.getElementById("statusText");
+
+        // Auth Logic
+        window.login = () => signInWithPopup(auth, provider).catch(err => console.error(err));
+        window.logout = () => signOut(auth);
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                userName.innerText = user.displayName;
+                userImg.src = user.photoURL;
+                authPanel.classList.add("hidden");
+                mainPanel.classList.remove("hidden");
+                checkUserKey();
+            } else {
+                currentUser = null;
+                authPanel.classList.remove("hidden");
+                mainPanel.classList.add("hidden");
+                statusText.innerText = "";
+            }
+        });
+
+        async function checkUserKey() {
+            const dbRef = ref(db);
             try {
-                const response = await fetch(FIREBASE_GENERATE_URL);
-                const data = await response.json();
+                const snapshot = await get(child(dbRef, `users/${currentUser.uid}`));
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    const now = Date.now();
 
-                if (data.success) {
-                    const key = data.key;
-                    box.innerText = key;
-                    
-                    // Copy to clipboard
-                    navigator.clipboard.writeText(key).then(() => {
-                        status.innerText = "Key copied to clipboard!";
-                        btn.innerText = "COPIED";
-                        setTimeout(() => {
-                            status.innerText = "";
-                            btn.innerText = "GENERATE KEY";
-                            btn.disabled = false;
-                        }, 5000);
-                    }).catch(err => {
-                        status.innerText = "Key generated! Please copy manually.";
-                        btn.disabled = false;
-                        btn.innerText = "GENERATE KEY";
-                    });
+                    if (data.expires_at > now) {
+                        showKey(data.key, data.expires_at);
+                    } else {
+                        showGenerateSection();
+                    }
                 } else {
-                    // This catches the IP rate limit or server errors
-                    box.innerText = "FAILED";
-                    status.innerText = data.error || "An error occurred.";
-                    status.className = "status error";
-                    btn.disabled = false;
-                    btn.innerText = "TRY AGAIN";
+                    showGenerateSection();
                 }
             } catch (err) {
-                box.innerText = "NETWORK ERROR";
-                status.innerText = "Could not connect to Firebase.";
-                status.className = "status error";
-                btn.disabled = false;
-                btn.innerText = "TRY AGAIN";
+                console.error(err);
             }
+        }
+
+        function showKey(key, expiresAt) {
+            noKeySection.classList.add("hidden");
+            activeKeySection.classList.remove("hidden");
+            keyBox.innerText = key;
+            startCountdown(expiresAt);
+        }
+
+        function showGenerateSection() {
+            noKeySection.classList.remove("hidden");
+            activeKeysection?.classList.add("hidden");
+            if (activeTimer) clearInterval(activeTimer);
+        }
+
+        window.handleGenerate = async () => {
+            const btn = document.getElementById("genBtn");
+            btn.disabled = true;
+            btn.innerText = "GENERATING...";
+
+            const newKey = generateDrkKeyFormat();
+            const now = Date.now();
+            const expiresAt = now + (24 * 60 * 60 * 1000);
+
+            try {
+                // Save to both /keys and /users
+                const updates = {};
+                updates[`keys/${newKey}`] = { created_at: now, expires_at: expiresAt, hwid: "UNBOUND", active: true, uid: currentUser.uid };
+                updates[`users/${currentUser.uid}`] = { key: newKey, expires_at: expiresAt };
+                
+                await update(ref(db), updates);
+                showKey(newKey, expiresAt);
+            } catch (err) {
+                console.error(err);
+                statusText.innerText = "Error saving key to cloud.";
+                btn.disabled = false;
+                btn.innerText = "GENERATE NEW KEY";
+            }
+        };
+
+        function generateDrkKeyFormat() {
+            const chars = '0123456789ABCDEF';
+            let res = '';
+            for (let i = 0; i < 12; i++) res += chars.charAt(Math.floor(Math.random() * chars.length));
+            return `DRK-${res.substring(0,4)}-${res.substring(4,8)}-${res.substring(8,12)}`;
+        }
+
+        function startCountdown(expiresAt) {
+            if (activeTimer) clearInterval(activeTimer);
+            activeTimer = setInterval(() => {
+                const now = Date.now();
+                const diff = expiresAt - now;
+
+                if (diff <= 0) {
+                    clearInterval(activeTimer);
+                    showGenerateSection();
+                    return;
+                }
+
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                timerText.innerText = `Expires in: ${h}h ${m}m ${s}s`;
+            }, 1000);
+        }
+
+        window.copyKey = () => {
+            navigator.clipboard.writeText(keyBox.innerText);
+            statusText.innerText = "Key copied to clipboard!";
+            setTimeout(() => statusText.innerText = "", 3000);
         }
     </script>
 </body>
