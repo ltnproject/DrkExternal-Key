@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drk External - Key System</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&display=swap');
+        
+        body {
+            background-color: #120A1F;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #1C112E;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 20px #2A0845;
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid #4A1C40;
+        }
+
+        h1 {
+            color: #A855F7;
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+        }
+
+        p {
+            color: #D8B4E2;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .key-display {
+            background-color: #241639;
+            border: 1px solid #4A1C40;
+            padding: 15px;
+            font-size: 18px;
+            font-family: monospace;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            color: #FFF;
+            word-wrap: break-word;
+            min-height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button {
+            background-color: #7B2CBF;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.2s;
+            width: 100%;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #9D4EDD;
+            box-shadow: 0px 0px 10px #7B2CBF;
+        }
+
+        button:disabled {
+            background-color: #4A1C40;
+            cursor: not-allowed;
+            color: #AAA;
+        }
+
+        .status {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #61A5C2;
+            height: 15px;
+        }
+        .error {
+            color: #FF5252;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>DRK EXTERNAL</h1>
+        <p>Complete the steps to get your 24-hour key.</p>
+
+        <!-- In a real scenario, you can put Linkvertise links here and hide the button until completed -->
+        
+        <div class="key-display" id="keyBox">Click Generate Below</div>
+        
+        <button id="genBtn" onclick="generateKey()">GENERATE KEY</button>
+        
+        <div class="status" id="statusText"></div>
+    </div>
+
+    <script>
+        // Replace this with your actual Firebase Cloud Function URL
+        const FIREBASE_GENERATE_URL = "https://us-central1-YOUR-FIREBASE-PROJECT.cloudfunctions.net/generateKey";
+
+        async function generateKey() {
+            const btn = document.getElementById("genBtn");
+            const box = document.getElementById("keyBox");
+            const status = document.getElementById("statusText");
+
+            btn.disabled = true;
+            btn.innerText = "GENERATING...";
+            box.innerText = "Connecting to Cloud...";
+            status.innerText = "";
+            status.className = "status";
+
+            try {
+                const response = await fetch(FIREBASE_GENERATE_URL);
+                const data = await response.json();
+
+                if (data.success) {
+                    const key = data.key;
+                    box.innerText = key;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(key).then(() => {
+                        status.innerText = "Key copied to clipboard!";
+                        btn.innerText = "COPIED";
+                        setTimeout(() => {
+                            status.innerText = "";
+                            btn.innerText = "GENERATE KEY";
+                            btn.disabled = false;
+                        }, 5000);
+                    }).catch(err => {
+                        status.innerText = "Key generated! Please copy manually.";
+                        btn.disabled = false;
+                        btn.innerText = "GENERATE KEY";
+                    });
+                } else {
+                    // This catches the IP rate limit or server errors
+                    box.innerText = "FAILED";
+                    status.innerText = data.error || "An error occurred.";
+                    status.className = "status error";
+                    btn.disabled = false;
+                    btn.innerText = "TRY AGAIN";
+                }
+            } catch (err) {
+                box.innerText = "NETWORK ERROR";
+                status.innerText = "Could not connect to Firebase.";
+                status.className = "status error";
+                btn.disabled = false;
+                btn.innerText = "TRY AGAIN";
+            }
+        }
+    </script>
+</body>
+</html>
