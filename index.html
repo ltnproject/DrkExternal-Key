@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drk External - Key System</title>
-    <meta name="description" content="Generate your Drk External license key. Sign in with Google and get instant access for 24 hours.">
+    <title>Drk External — Key System</title>
+    <meta name="description" content="Generate your Drk External license key. Sign in with Google and get instant 24-hour access.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -16,14 +16,15 @@
             --primary-light: #c084fc;
             --primary-dark: #7c3aed;
             --accent: #e879f9;
+            --accent-blue: #818cf8;
             --bg-deep: #030014;
-            --bg-card: rgba(20, 10, 45, 0.65);
-            --border-glow: rgba(168, 85, 247, 0.2);
+            --bg-card: rgba(12, 6, 30, 0.75);
+            --border-glow: rgba(168, 85, 247, 0.15);
             --text: #f1f0f5;
             --text-dim: #a78bcc;
             --text-muted: #6b5b8a;
-            --success: #22c55e;
-            --error: #f43f5e;
+            --success: #34d399;
+            --error: #fb7185;
         }
 
         body {
@@ -32,280 +33,475 @@
             font-family: 'Inter', -apple-system, sans-serif;
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             overflow: hidden;
             position: relative;
         }
 
-        /* ── Animated Background ── */
-        .bg-grid {
+        /* ── Cosmic Background ── */
+        canvas#bgCanvas {
             position: fixed; inset: 0; z-index: 0;
-            background-image:
-                linear-gradient(rgba(168,85,247,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(168,85,247,0.03) 1px, transparent 1px);
-            background-size: 60px 60px;
-            mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
         }
 
-        .orb {
-            position: fixed; border-radius: 50%; filter: blur(100px); z-index: 0;
-            animation: orbFloat 18s ease-in-out infinite alternate;
-        }
-        .orb-1 { width: 450px; height: 450px; background: rgba(168,85,247,0.15); top: -15%; left: -5%; }
-        .orb-2 { width: 350px; height: 350px; background: rgba(232,121,249,0.1); bottom: -10%; right: -5%; animation-delay: -6s; }
-
-        @keyframes orbFloat {
-            0%   { transform: translate(0, 0) scale(1); }
-            50%  { transform: translate(30px, -20px) scale(1.08); }
-            100% { transform: translate(-15px, 15px) scale(0.95); }
-        }
-
-        .particles {
-            position: fixed; inset: 0; z-index: 0; pointer-events: none;
-        }
-        .particle {
-            position: absolute; width: 2px; height: 2px;
-            background: var(--primary-light); border-radius: 50%;
-            animation: particleRise linear infinite; opacity: 0;
-        }
-        @keyframes particleRise {
-            0%   { opacity: 0; transform: translateY(0) scale(0); }
-            10%  { opacity: 0.6; }
-            90%  { opacity: 0.2; }
-            100% { opacity: 0; transform: translateY(-100vh) scale(1); }
-        }
-
-        /* ── Container ── */
-        .container {
-            position: relative; z-index: 1;
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border-glow);
-            border-radius: 24px;
-            padding: 48px 40px;
-            width: 92%;
-            max-width: 440px;
-            text-align: center;
-            animation: cardEntry 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
-        }
-        .container::before {
-            content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-            width: 180px; height: 1px;
-            background: linear-gradient(90deg, transparent, var(--primary), transparent);
-        }
-        .container::after {
-            content: ''; position: absolute; inset: 0;
-            background: radial-gradient(ellipse at top center, rgba(168,85,247,0.06), transparent 60%);
+        .noise {
+            position: fixed; inset: 0; z-index: 0;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+            opacity: 0.5;
             pointer-events: none;
         }
 
-        @keyframes cardEntry {
-            from { opacity: 0; transform: translateY(30px) scale(0.96); }
-            to   { opacity: 1; transform: translateY(0) scale(1); }
+        .gradient-sphere {
+            position: fixed; border-radius: 50%; z-index: 0; pointer-events: none;
+        }
+        .sphere-1 {
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(168,85,247,0.12) 0%, transparent 70%);
+            top: -200px; left: -100px;
+            animation: sphereDrift 25s ease-in-out infinite alternate;
+        }
+        .sphere-2 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(232,121,249,0.08) 0%, transparent 70%);
+            bottom: -200px; right: -100px;
+            animation: sphereDrift 20s ease-in-out infinite alternate-reverse;
+        }
+        .sphere-3 {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(129,140,248,0.06) 0%, transparent 70%);
+            top: 50%; left: 60%;
+            animation: sphereDrift 30s ease-in-out infinite alternate;
+        }
+        @keyframes sphereDrift {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(60px, -40px) scale(1.1); }
+            66% { transform: translate(-30px, 50px) scale(0.9); }
+            100% { transform: translate(20px, -20px) scale(1.05); }
         }
 
-        /* ── Logo ── */
-        .logo-area {
-            margin-bottom: 8px;
+        /* ── Main Layout ── */
+        .page-wrapper {
+            position: relative; z-index: 1;
+            display: flex; flex-direction: column; align-items: center;
+            gap: 20px; padding: 20px;
+            width: 100%; max-width: 520px;
+            animation: pageEntry 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .logo {
-            font-size: 22px; font-weight: 900; letter-spacing: 4px;
-            background: linear-gradient(135deg, var(--primary-light), var(--accent));
+        @keyframes pageEntry {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* ── Logo Header ── */
+        .logo-header {
+            text-align: center; margin-bottom: 4px;
+        }
+        .logo-icon {
+            width: 56px; height: 56px;
+            margin: 0 auto 14px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 8px 32px rgba(168,85,247,0.3);
+            animation: iconGlow 3s ease-in-out infinite alternate;
+        }
+        @keyframes iconGlow {
+            from { box-shadow: 0 8px 32px rgba(168,85,247,0.3); }
+            to { box-shadow: 0 8px 48px rgba(232,121,249,0.4); }
+        }
+        .logo-icon svg { color: white; }
+
+        .logo-text {
+            font-size: 28px; font-weight: 900; letter-spacing: 3px;
+            background: linear-gradient(135deg, #fff 0%, var(--primary-light) 50%, var(--accent) 100%);
+            background-size: 200% auto;
             -webkit-background-clip: text; background-clip: text;
             -webkit-text-fill-color: transparent;
+            animation: shimmer 4s linear infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
         }
         .logo-sub {
-            font-size: 11px; color: var(--text-muted);
-            letter-spacing: 3px; text-transform: uppercase;
-            margin-top: 4px; font-weight: 600;
+            font-size: 11px; color: var(--text-muted); letter-spacing: 5px;
+            text-transform: uppercase; font-weight: 600; margin-top: 6px;
         }
 
-        .divider {
-            width: 50px; height: 2px; margin: 24px auto;
-            background: linear-gradient(90deg, transparent, var(--primary), transparent);
-            border-radius: 2px;
+        /* ── Card ── */
+        .card {
+            position: relative;
+            width: 100%;
+            background: var(--bg-card);
+            backdrop-filter: blur(24px) saturate(1.5);
+            border: 1px solid var(--border-glow);
+            border-radius: 28px;
+            padding: 40px 36px;
+            text-align: center;
+            overflow: hidden;
         }
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 10%, rgba(168,85,247,0.4) 30%, rgba(232,121,249,0.5) 50%, rgba(168,85,247,0.4) 70%, transparent 90%);
+        }
+        .card::after {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(ellipse at top center, rgba(168,85,247,0.04) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        /* ── Sections inside card ── */
+        .card-inner { position: relative; z-index: 1; }
 
         /* ── User Info ── */
         .user-info {
             display: flex; align-items: center; justify-content: center;
-            gap: 12px; margin-bottom: 24px;
+            gap: 14px; margin-bottom: 28px;
+            padding: 12px 18px;
+            background: rgba(168,85,247,0.06);
+            border: 1px solid rgba(168,85,247,0.1);
+            border-radius: 14px;
         }
         .user-info img {
-            width: 36px; height: 36px; border-radius: 50%;
+            width: 38px; height: 38px; border-radius: 50%;
             border: 2px solid rgba(168,85,247,0.3);
+            box-shadow: 0 0 12px rgba(168,85,247,0.15);
         }
-        .user-info .name {
-            font-size: 14px; font-weight: 600; color: var(--text);
+        .user-meta { text-align: left; }
+        .user-meta .name {
+            font-size: 14px; font-weight: 700; color: var(--text);
+            display: block;
         }
-        .logout-link {
-            font-size: 11px; color: var(--error); text-decoration: none;
-            font-weight: 600; cursor: pointer; transition: opacity 0.2s;
-            margin-left: 4px;
+        .user-meta .email-hint {
+            font-size: 11px; color: var(--text-muted); font-weight: 500;
         }
-        .logout-link:hover { opacity: 0.7; }
+        .logout-btn {
+            margin-left: auto;
+            background: rgba(251,113,133,0.1);
+            border: 1px solid rgba(251,113,133,0.15);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 11px; font-weight: 700; color: var(--error);
+            cursor: pointer; transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .logout-btn:hover {
+            background: rgba(251,113,133,0.2);
+            border-color: rgba(251,113,133,0.3);
+        }
 
-        /* ── Text ── */
+        /* ── Info Text ── */
         .info-text {
-            font-size: 14px; color: var(--text-dim); line-height: 1.6;
+            font-size: 14px; line-height: 1.7; color: var(--text-dim);
             margin-bottom: 28px;
         }
+        .info-text strong { color: var(--primary-light); font-weight: 600; }
 
         /* ── Key Display ── */
+        .key-wrapper { margin-bottom: 16px; }
+        .key-label {
+            font-size: 11px; font-weight: 700; letter-spacing: 3px;
+            text-transform: uppercase; color: var(--text-muted);
+            margin-bottom: 10px;
+        }
         .key-display {
             position: relative;
-            background: rgba(10, 5, 30, 0.7);
-            border: 1px solid rgba(168,85,247,0.15);
-            padding: 16px 20px;
+            background: rgba(6, 2, 18, 0.8);
+            border: 1px solid rgba(168,85,247,0.12);
+            padding: 18px 22px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 18px; font-weight: 700;
-            border-radius: 14px;
+            font-size: 20px; font-weight: 700;
+            border-radius: 16px;
             color: var(--text);
             word-break: break-all;
-            min-height: 54px;
+            min-height: 58px;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 12px;
-            letter-spacing: 1px;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 2px;
+            overflow: hidden;
+        }
+        .key-display::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(168,85,247,0.05), transparent 50%);
+            opacity: 0; transition: opacity 0.3s;
         }
         .key-display:hover {
-            border-color: rgba(168,85,247,0.4);
-            box-shadow: 0 0 20px rgba(168,85,247,0.08);
+            border-color: rgba(168,85,247,0.35);
+            box-shadow: 0 0 30px rgba(168,85,247,0.08), inset 0 0 30px rgba(168,85,247,0.03);
+            transform: scale(1.01);
+        }
+        .key-display:hover::before { opacity: 1; }
+        .key-display.copied {
+            border-color: rgba(52,211,153,0.4);
+            box-shadow: 0 0 30px rgba(52,211,153,0.1);
         }
 
         /* ── Timer ── */
-        .timer {
+        .timer-bar {
+            display: flex; align-items: center; justify-content: center;
+            gap: 8px; margin-bottom: 24px;
+        }
+        .timer-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 10px var(--success);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .timer-text {
             font-size: 12px; font-weight: 700; color: var(--primary-light);
-            margin-bottom: 24px; letter-spacing: 1px;
+            letter-spacing: 1px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ── Progress Bar ── */
+        .progress-container {
+            width: 100%; height: 3px;
+            background: rgba(168,85,247,0.08);
+            border-radius: 3px;
+            margin-bottom: 28px; overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 3px;
+            transition: width 1s linear;
         }
 
         /* ── Buttons ── */
         .btn {
             position: relative; display: flex; align-items: center; justify-content: center;
             gap: 10px; width: 100%;
-            padding: 14px 24px;
+            padding: 16px 28px;
             font-size: 14px; font-weight: 700;
-            border-radius: 14px; border: none; cursor: pointer;
-            transition: all 0.3s;
+            border-radius: 16px; border: none; cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             font-family: 'Inter', sans-serif;
             letter-spacing: 0.5px;
             overflow: hidden;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        .btn-generate {
+            background: linear-gradient(135deg, var(--primary), #9333ea, var(--primary-dark));
+            background-size: 200% auto;
             color: white;
+            box-shadow: 0 4px 20px rgba(168,85,247,0.2);
         }
-        .btn-primary::before {
+        .btn-generate::before {
             content: ''; position: absolute; inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent);
+            background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent 50%);
             opacity: 0; transition: opacity 0.3s;
         }
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 12px 30px rgba(168,85,247,0.3);
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(168,85,247,0.35);
+            background-position: right center;
         }
-        .btn-primary:hover::before { opacity: 1; }
-        .btn-primary:disabled {
-            opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none;
+        .btn-generate:hover::before { opacity: 1; }
+        .btn-generate:disabled {
+            opacity: 0.5; cursor: not-allowed; transform: none !important;
+            box-shadow: 0 4px 20px rgba(168,85,247,0.1) !important;
+        }
+
+        .btn-copy {
+            background: rgba(168,85,247,0.08);
+            border: 1px solid rgba(168,85,247,0.15);
+            color: var(--primary-light);
+        }
+        .btn-copy:hover {
+            background: rgba(168,85,247,0.15);
+            border-color: rgba(168,85,247,0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(168,85,247,0.1);
+        }
+        .btn-copy.copied {
+            background: rgba(52,211,153,0.1);
+            border-color: rgba(52,211,153,0.25);
+            color: var(--success);
         }
 
         .btn-google {
-            background: white; color: #333;
+            background: rgba(255,255,255,0.95); color: #1f1f1f;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
         }
         .btn-google:hover {
-            background: #f0f0f0;
-            box-shadow: 0 8px 25px rgba(255,255,255,0.08);
-            transform: translateY(-1px);
+            background: #fff;
+            box-shadow: 0 8px 30px rgba(255,255,255,0.12);
+            transform: translateY(-2px);
         }
-        .btn-google img { width: 18px; height: 18px; }
+        .btn-google img { width: 20px; height: 20px; }
 
         /* ── Status ── */
         .status {
-            margin-top: 18px; font-size: 12px; height: 16px;
-            color: var(--success); font-weight: 600;
-            transition: all 0.3s;
+            margin-top: 20px; font-size: 12px; min-height: 18px;
+            font-weight: 600; transition: all 0.3s;
+            color: var(--success);
         }
         .status.error { color: var(--error); }
+
+        /* ── Security badges ── */
+        .security-badges {
+            display: flex; justify-content: center; gap: 20px;
+            margin-top: 12px;
+        }
+        .sec-badge {
+            display: flex; align-items: center; gap: 5px;
+            font-size: 10px; color: var(--text-muted); font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .sec-badge svg { color: var(--text-muted); opacity: 0.7; }
 
         .hidden { display: none !important; }
 
         /* ── Responsive ── */
-        @media (max-width: 480px) {
-            .container { padding: 36px 24px; }
-            .key-display { font-size: 15px; padding: 14px 16px; }
+        @media (max-width: 520px) {
+            .card { padding: 32px 24px; border-radius: 22px; }
+            .key-display { font-size: 16px; padding: 16px 18px; letter-spacing: 1px; }
+            .user-info { flex-wrap: wrap; gap: 10px; }
+            .logout-btn { margin-left: 0; }
         }
     </style>
 </head>
 <body>
-    <div class="bg-grid"></div>
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="particles" id="particles"></div>
 
-    <div class="container">
-        <div class="logo-area">
-            <div class="logo">DRK EXTERNAL</div>
-            <div class="logo-sub">Key System</div>
+    <canvas id="bgCanvas"></canvas>
+    <div class="noise"></div>
+    <div class="gradient-sphere sphere-1"></div>
+    <div class="gradient-sphere sphere-2"></div>
+    <div class="gradient-sphere sphere-3"></div>
+
+    <div class="page-wrapper">
+        <!-- Logo -->
+        <div class="logo-header">
+            <div class="logo-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+            </div>
+            <div class="logo-text">DRK EXTERNAL</div>
+            <div class="logo-sub">License Portal</div>
         </div>
 
-        <div class="divider"></div>
+        <!-- Main Card -->
+        <div class="card">
+            <div class="card-inner">
 
-        <!-- Auth Panel -->
-        <div id="authPanel">
-            <p class="info-text">Sign in with your Google account to generate a 24-hour license key.</p>
-            <button class="btn btn-google" onclick="login()">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
-                Continue with Google
-            </button>
+                <!-- Auth Panel -->
+                <div id="authPanel">
+                    <p class="info-text">Sign in with your Google account to generate a <strong>24-hour license key</strong>. Each key is locked to your hardware on first launch.</p>
+                    <button class="btn btn-google" onclick="login()" id="loginBtn">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                        Continue with Google
+                    </button>
+                </div>
+
+                <!-- Main Panel -->
+                <div id="mainPanel" class="hidden">
+                    <div class="user-info">
+                        <img id="userImg" src="" alt="User avatar">
+                        <div class="user-meta">
+                            <span class="name" id="userName">User</span>
+                            <span class="email-hint" id="userEmail">Signed in</span>
+                        </div>
+                        <button class="logout-btn" onclick="logout()">Sign Out</button>
+                    </div>
+
+                    <!-- No Key -->
+                    <div id="noKeySection">
+                        <p class="info-text">Welcome! You can generate <strong>1 key every 24 hours</strong>. Your key is automatically bound to your PC on first use — no sharing possible.</p>
+                        <button class="btn btn-generate" id="genBtn" onclick="handleGenerate()">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                            Generate License Key
+                        </button>
+                    </div>
+
+                    <!-- Active Key -->
+                    <div id="activeKeySection" class="hidden">
+                        <div class="key-wrapper">
+                            <div class="key-label">Your License Key</div>
+                            <div class="key-display" id="keyBox" title="Click to copy" onclick="copyKey()">Connecting...</div>
+                        </div>
+
+                        <div class="timer-bar">
+                            <div class="timer-dot"></div>
+                            <div class="timer-text" id="timerText">Active — Expires in --:--:--</div>
+                        </div>
+
+                        <div class="progress-container">
+                            <div class="progress-fill" id="progressFill" style="width: 100%;"></div>
+                        </div>
+
+                        <button class="btn btn-copy" id="copyBtn" onclick="copyKey()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                            <span id="copyText">Copy to Clipboard</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="status" id="statusText"></div>
+            </div>
         </div>
 
-        <!-- Main Panel -->
-        <div id="mainPanel" class="hidden">
-            <div class="user-info">
-                <img id="userImg" src="" alt="User">
-                <span class="name" id="userName">User</span>
-                <a class="logout-link" onclick="logout()">Logout</a>
+        <!-- Security Badges -->
+        <div class="security-badges">
+            <div class="sec-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                HWID Protected
             </div>
-
-            <div id="noKeySection">
-                <p class="info-text">Welcome! You can generate 1 key every 24 hours. Your key will be locked to your machine on first use.</p>
-                <button class="btn btn-primary" id="genBtn" onclick="handleGenerate()">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-                    GENERATE KEY
-                </button>
+            <div class="sec-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Firebase Secured
             </div>
-
-            <div id="activeKeySection" class="hidden">
-                <p class="info-text" style="margin-bottom: 16px;">Your Active Key:</p>
-                <div class="key-display" id="keyBox" title="Click to copy" onclick="copyKey()">Connecting...</div>
-                <div class="timer" id="timerText">Expires in: --:--:--</div>
-                <button class="btn btn-primary" onclick="copyKey()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                    COPY KEY
-                </button>
+            <div class="sec-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Encrypted
             </div>
         </div>
-
-        <div class="status" id="statusText"></div>
     </div>
 
-    <!-- Particles -->
+    <!-- Star field canvas -->
     <script>
-        const container = document.getElementById('particles');
-        for (let i = 0; i < 25; i++) {
-            const p = document.createElement('div');
-            p.className = 'particle';
-            p.style.left = Math.random() * 100 + '%';
-            p.style.bottom = '-5px';
-            p.style.animationDuration = (8 + Math.random() * 12) + 's';
-            p.style.animationDelay = (Math.random() * 10) + 's';
-            p.style.width = p.style.height = (1 + Math.random() * 2) + 'px';
-            container.appendChild(p);
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+        const STAR_COUNT = 120;
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initStars();
         }
+
+        function initStars() {
+            stars = [];
+            for (let i = 0; i < STAR_COUNT; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    r: Math.random() * 1.2 + 0.2,
+                    alpha: Math.random() * 0.5 + 0.1,
+                    speed: Math.random() * 0.0005 + 0.0002,
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+        }
+
+        function drawStars(time) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            stars.forEach(s => {
+                const twinkle = Math.sin(time * s.speed * 1000 + s.phase) * 0.3 + 0.7;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(192, 132, 252, ${s.alpha * twinkle})`;
+                ctx.fill();
+            });
+            requestAnimationFrame(drawStars);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        requestAnimationFrame(drawStars);
     </script>
 
     <!-- Firebase SDKs -->
@@ -314,7 +510,6 @@
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, set, get, child, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // --- FIREBASE CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyB-fiGhXqie8nAgHhBliKQNFRvnoge4-90",
             authDomain: "drk-external.firebaseapp.com",
@@ -332,19 +527,21 @@
 
         let currentUser = null;
         let activeTimer = null;
+        let keyExpiresAt = 0;
+        const KEY_DURATION = 24 * 60 * 60 * 1000;
 
-        // UI Elements
         const authPanel = document.getElementById("authPanel");
         const mainPanel = document.getElementById("mainPanel");
         const noKeySection = document.getElementById("noKeySection");
         const activeKeySection = document.getElementById("activeKeySection");
         const userImg = document.getElementById("userImg");
         const userName = document.getElementById("userName");
+        const userEmail = document.getElementById("userEmail");
         const keyBox = document.getElementById("keyBox");
         const timerText = document.getElementById("timerText");
+        const progressFill = document.getElementById("progressFill");
         const statusText = document.getElementById("statusText");
 
-        // Auth Logic
         window.login = () => signInWithPopup(auth, provider).catch(err => console.error(err));
         window.logout = () => signOut(auth);
 
@@ -352,6 +549,7 @@
             if (user) {
                 currentUser = user;
                 userName.innerText = user.displayName;
+                userEmail.innerText = user.email || 'Signed in';
                 userImg.src = user.photoURL;
                 authPanel.classList.add("hidden");
                 mainPanel.classList.remove("hidden");
@@ -370,8 +568,7 @@
                 const snapshot = await get(child(dbRef, `users/${currentUser.uid}`));
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    const now = Date.now();
-                    if (data.expires_at > now) {
+                    if (data.expires_at > Date.now()) {
                         showKey(data.key, data.expires_at);
                     } else {
                         showGenerateSection();
@@ -379,12 +576,11 @@
                 } else {
                     showGenerateSection();
                 }
-            } catch (err) {
-                console.error(err);
-            }
+            } catch (err) { console.error(err); }
         }
 
         function showKey(key, expiresAt) {
+            keyExpiresAt = expiresAt;
             noKeySection.classList.add("hidden");
             activeKeySection.classList.remove("hidden");
             keyBox.innerText = key;
@@ -400,25 +596,32 @@
         window.handleGenerate = async () => {
             const btn = document.getElementById("genBtn");
             btn.disabled = true;
-            btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10" opacity="0.3"/><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></path></svg> GENERATING...`;
+            btn.innerHTML = `<svg class="spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Generating...`;
+
+            // Add spin CSS dynamically
+            if (!document.getElementById('spinStyle')) {
+                const style = document.createElement('style');
+                style.id = 'spinStyle';
+                style.textContent = `.spin { animation: spin 1s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`;
+                document.head.appendChild(style);
+            }
 
             const newKey = generateDrkKeyFormat();
             const now = Date.now();
-            const expiresAt = now + (24 * 60 * 60 * 1000);
+            const expiresAt = now + KEY_DURATION;
 
             try {
                 const updates = {};
                 updates[`keys/${newKey}`] = { created_at: now, expires_at: expiresAt, hwid: "UNBOUND", active: true, uid: currentUser.uid };
                 updates[`users/${currentUser.uid}`] = { key: newKey, expires_at: expiresAt };
-                
                 await update(ref(db), updates);
                 showKey(newKey, expiresAt);
             } catch (err) {
                 console.error(err);
-                statusText.innerText = "Error saving key to cloud.";
+                statusText.innerText = "Error saving key. Please try again.";
                 statusText.classList.add("error");
                 btn.disabled = false;
-                btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> GENERATE KEY`;
+                btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Generate License Key`;
             }
         };
 
@@ -431,6 +634,8 @@
 
         function startCountdown(expiresAt) {
             if (activeTimer) clearInterval(activeTimer);
+            const createdAt = expiresAt - KEY_DURATION;
+
             activeTimer = setInterval(() => {
                 const now = Date.now();
                 const diff = expiresAt - now;
@@ -441,18 +646,33 @@
                     return;
                 }
 
-                const h = Math.floor(diff / 3600000);
-                const m = Math.floor((diff % 3600000) / 60000);
-                const s = Math.floor((diff % 60000) / 1000);
-                timerText.innerText = `Expires in: ${h}h ${m}m ${s}s`;
+                const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
+                const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+                const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+                timerText.innerText = `Active — ${h}:${m}:${s} remaining`;
+
+                const elapsed = now - createdAt;
+                const pct = Math.max(0, 100 - (elapsed / KEY_DURATION * 100));
+                progressFill.style.width = pct + '%';
             }, 1000);
         }
 
         window.copyKey = () => {
             navigator.clipboard.writeText(keyBox.innerText);
-            statusText.innerText = "✓ Key copied to clipboard!";
-            statusText.classList.remove("error");
-            setTimeout(() => statusText.innerText = "", 3000);
+            const copyBtn = document.getElementById('copyBtn');
+            const copyText = document.getElementById('copyText');
+            const keyDisplayEl = document.getElementById('keyBox');
+
+            copyBtn.classList.add('copied');
+            keyDisplayEl.classList.add('copied');
+            copyText.innerText = '✓ Copied!';
+            statusText.innerText = "";
+
+            setTimeout(() => {
+                copyBtn.classList.remove('copied');
+                keyDisplayEl.classList.remove('copied');
+                copyText.innerText = 'Copy to Clipboard';
+            }, 2500);
         }
     </script>
 </body>
