@@ -4,172 +4,309 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drk External - Key System</title>
+    <meta name="description" content="Generate your Drk External license key. Sign in with Google and get instant access for 24 hours.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&display=swap');
-        
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #a855f7;
+            --primary-light: #c084fc;
+            --primary-dark: #7c3aed;
+            --accent: #e879f9;
+            --bg-deep: #030014;
+            --bg-card: rgba(20, 10, 45, 0.65);
+            --border-glow: rgba(168, 85, 247, 0.2);
+            --text: #f1f0f5;
+            --text-dim: #a78bcc;
+            --text-muted: #6b5b8a;
+            --success: #22c55e;
+            --error: #f43f5e;
+        }
+
         body {
-            background-color: #120A1F;
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
+            background: var(--bg-deep);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, sans-serif;
+            min-height: 100vh;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            overflow: hidden;
+            position: relative;
         }
 
+        /* ── Animated Background ── */
+        .bg-grid {
+            position: fixed; inset: 0; z-index: 0;
+            background-image:
+                linear-gradient(rgba(168,85,247,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(168,85,247,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+        }
+
+        .orb {
+            position: fixed; border-radius: 50%; filter: blur(100px); z-index: 0;
+            animation: orbFloat 18s ease-in-out infinite alternate;
+        }
+        .orb-1 { width: 450px; height: 450px; background: rgba(168,85,247,0.15); top: -15%; left: -5%; }
+        .orb-2 { width: 350px; height: 350px; background: rgba(232,121,249,0.1); bottom: -10%; right: -5%; animation-delay: -6s; }
+
+        @keyframes orbFloat {
+            0%   { transform: translate(0, 0) scale(1); }
+            50%  { transform: translate(30px, -20px) scale(1.08); }
+            100% { transform: translate(-15px, 15px) scale(0.95); }
+        }
+
+        .particles {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+        }
+        .particle {
+            position: absolute; width: 2px; height: 2px;
+            background: var(--primary-light); border-radius: 50%;
+            animation: particleRise linear infinite; opacity: 0;
+        }
+        @keyframes particleRise {
+            0%   { opacity: 0; transform: translateY(0) scale(0); }
+            10%  { opacity: 0.6; }
+            90%  { opacity: 0.2; }
+            100% { opacity: 0; transform: translateY(-100vh) scale(1); }
+        }
+
+        /* ── Container ── */
         .container {
-            background-color: #1C112E;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 20px #2A0845;
+            position: relative; z-index: 1;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glow);
+            border-radius: 24px;
+            padding: 48px 40px;
+            width: 92%;
+            max-width: 440px;
             text-align: center;
-            width: 90%;
-            max-width: 420px;
-            border: 1px solid #4A1C40;
+            animation: cardEntry 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+        .container::before {
+            content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 180px; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+        }
+        .container::after {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(ellipse at top center, rgba(168,85,247,0.06), transparent 60%);
+            pointer-events: none;
         }
 
-        h1 {
-            color: #A855F7;
-            margin-bottom: 5px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
+        @keyframes cardEntry {
+            from { opacity: 0; transform: translateY(30px) scale(0.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
         }
 
+        /* ── Logo ── */
+        .logo-area {
+            margin-bottom: 8px;
+        }
+        .logo {
+            font-size: 22px; font-weight: 900; letter-spacing: 4px;
+            background: linear-gradient(135deg, var(--primary-light), var(--accent));
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .logo-sub {
+            font-size: 11px; color: var(--text-muted);
+            letter-spacing: 3px; text-transform: uppercase;
+            margin-top: 4px; font-weight: 600;
+        }
+
+        .divider {
+            width: 50px; height: 2px; margin: 24px auto;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            border-radius: 2px;
+        }
+
+        /* ── User Info ── */
         .user-info {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            color: #D8B4E2;
+            display: flex; align-items: center; justify-content: center;
+            gap: 12px; margin-bottom: 24px;
         }
-
         .user-info img {
-            width: 30px;
-            border-radius: 50%;
+            width: 36px; height: 36px; border-radius: 50%;
+            border: 2px solid rgba(168,85,247,0.3);
+        }
+        .user-info .name {
+            font-size: 14px; font-weight: 600; color: var(--text);
+        }
+        .logout-link {
+            font-size: 11px; color: var(--error); text-decoration: none;
+            font-weight: 600; cursor: pointer; transition: opacity 0.2s;
+            margin-left: 4px;
+        }
+        .logout-link:hover { opacity: 0.7; }
+
+        /* ── Text ── */
+        .info-text {
+            font-size: 14px; color: var(--text-dim); line-height: 1.6;
+            margin-bottom: 28px;
         }
 
-        p {
-            color: #D8B4E2;
-            font-size: 14px;
-            margin-bottom: 25px;
-        }
-
+        /* ── Key Display ── */
         .key-display {
-            background-color: #241639;
-            border: 1px solid #4A1C40;
-            padding: 15px;
-            font-size: 18px;
-            font-family: monospace;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            color: #FFF;
-            word-wrap: break-word;
-            min-height: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: relative;
+            background: rgba(10, 5, 30, 0.7);
+            border: 1px solid rgba(168,85,247,0.15);
+            padding: 16px 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px; font-weight: 700;
+            border-radius: 14px;
+            color: var(--text);
+            word-break: break-all;
+            min-height: 54px;
+            display: flex; align-items: center; justify-content: center;
             cursor: pointer;
-            transition: 0.2s;
+            transition: all 0.3s;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
         }
         .key-display:hover {
-            border-color: #7B2CBF;
+            border-color: rgba(168,85,247,0.4);
+            box-shadow: 0 0 20px rgba(168,85,247,0.08);
         }
 
+        /* ── Timer ── */
         .timer {
-            font-size: 13px;
-            color: #A855F7;
-            margin-bottom: 20px;
-            font-weight: bold;
+            font-size: 12px; font-weight: 700; color: var(--primary-light);
+            margin-bottom: 24px; letter-spacing: 1px;
         }
 
-        button {
-            background-color: #7B2CBF;
+        /* ── Buttons ── */
+        .btn {
+            position: relative; display: flex; align-items: center; justify-content: center;
+            gap: 10px; width: 100%;
+            padding: 14px 24px;
+            font-size: 14px; font-weight: 700;
+            border-radius: 14px; border: none; cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0.5px;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
-            border: none;
-            padding: 12px 25px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: 0.2s;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+        }
+        .btn-primary::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 30px rgba(168,85,247,0.3);
+        }
+        .btn-primary:hover::before { opacity: 1; }
+        .btn-primary:disabled {
+            opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none;
         }
 
-        button:hover:not(:disabled) {
-            background-color: #9D4EDD;
-            box-shadow: 0px 0px 10px #7B2CBF;
+        .btn-google {
+            background: white; color: #333;
         }
+        .btn-google:hover {
+            background: #f0f0f0;
+            box-shadow: 0 8px 25px rgba(255,255,255,0.08);
+            transform: translateY(-1px);
+        }
+        .btn-google img { width: 18px; height: 18px; }
 
-        button:disabled {
-            background-color: #4A1C40;
-            cursor: not-allowed;
-            color: #AAA;
-        }
-
-        .google-btn {
-            background-color: #FFF;
-            color: #444;
-        }
-        .google-btn:hover {
-            background-color: #EEE;
-            box-shadow: 0px 0px 10px #FFF;
-        }
-
+        /* ── Status ── */
         .status {
-            margin-top: 15px;
-            font-size: 13px;
-            color: #61A5C2;
-            height: 15px;
+            margin-top: 18px; font-size: 12px; height: 16px;
+            color: var(--success); font-weight: 600;
+            transition: all 0.3s;
         }
-        .error {
-            color: #FF5252;
-        }
+        .status.error { color: var(--error); }
+
         .hidden { display: none !important; }
+
+        /* ── Responsive ── */
+        @media (max-width: 480px) {
+            .container { padding: 36px 24px; }
+            .key-display { font-size: 15px; padding: 14px 16px; }
+        }
     </style>
 </head>
 <body>
+    <div class="bg-grid"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="particles" id="particles"></div>
 
     <div class="container">
-        <h1>DRK EXTERNAL</h1>
-        
+        <div class="logo-area">
+            <div class="logo">DRK EXTERNAL</div>
+            <div class="logo-sub">Key System</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Auth Panel -->
         <div id="authPanel">
-            <p>Login to generate your 24-hour key.</p>
-            <button class="google-btn" onclick="login()">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20">
-                Login with Google
+            <p class="info-text">Sign in with your Google account to generate a 24-hour license key.</p>
+            <button class="btn btn-google" onclick="login()">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                Continue with Google
             </button>
         </div>
 
+        <!-- Main Panel -->
         <div id="mainPanel" class="hidden">
             <div class="user-info">
-                <img id="userImg" src="">
-                <span id="userName">User</span>
-                <a href="#" onclick="logout()" style="color: #FF5252; text-decoration: none; font-size: 11px;">Logout</a>
+                <img id="userImg" src="" alt="User">
+                <span class="name" id="userName">User</span>
+                <a class="logout-link" onclick="logout()">Logout</a>
             </div>
 
             <div id="noKeySection">
-                <p>Welcome! You can generate 1 key every 24 hours.</p>
-                <button id="genBtn" onclick="handleGenerate()">GENERATE NEW KEY</button>
+                <p class="info-text">Welcome! You can generate 1 key every 24 hours. Your key will be locked to your machine on first use.</p>
+                <button class="btn btn-primary" id="genBtn" onclick="handleGenerate()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                    GENERATE KEY
+                </button>
             </div>
 
             <div id="activeKeySection" class="hidden">
-                <p>Your Active Key:</p>
-                <div class="key-display" id="keyBox" title="Click to copy">Connecting...</div>
+                <p class="info-text" style="margin-bottom: 16px;">Your Active Key:</p>
+                <div class="key-display" id="keyBox" title="Click to copy" onclick="copyKey()">Connecting...</div>
                 <div class="timer" id="timerText">Expires in: --:--:--</div>
-                <button onclick="copyKey()">COPY KEY</button>
+                <button class="btn btn-primary" onclick="copyKey()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    COPY KEY
+                </button>
             </div>
         </div>
-        
+
         <div class="status" id="statusText"></div>
     </div>
+
+    <!-- Particles -->
+    <script>
+        const container = document.getElementById('particles');
+        for (let i = 0; i < 25; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.bottom = '-5px';
+            p.style.animationDuration = (8 + Math.random() * 12) + 's';
+            p.style.animationDelay = (Math.random() * 10) + 's';
+            p.style.width = p.style.height = (1 + Math.random() * 2) + 'px';
+            container.appendChild(p);
+        }
+    </script>
 
     <!-- Firebase SDKs -->
     <script type="module">
@@ -234,7 +371,6 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     const now = Date.now();
-
                     if (data.expires_at > now) {
                         showKey(data.key, data.expires_at);
                     } else {
@@ -257,21 +393,20 @@
 
         function showGenerateSection() {
             noKeySection.classList.remove("hidden");
-            activeKeysection?.classList.add("hidden");
+            activeKeySection.classList.add("hidden");
             if (activeTimer) clearInterval(activeTimer);
         }
 
         window.handleGenerate = async () => {
             const btn = document.getElementById("genBtn");
             btn.disabled = true;
-            btn.innerText = "GENERATING...";
+            btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10" opacity="0.3"/><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></path></svg> GENERATING...`;
 
             const newKey = generateDrkKeyFormat();
             const now = Date.now();
             const expiresAt = now + (24 * 60 * 60 * 1000);
 
             try {
-                // Save to both /keys and /users
                 const updates = {};
                 updates[`keys/${newKey}`] = { created_at: now, expires_at: expiresAt, hwid: "UNBOUND", active: true, uid: currentUser.uid };
                 updates[`users/${currentUser.uid}`] = { key: newKey, expires_at: expiresAt };
@@ -281,8 +416,9 @@
             } catch (err) {
                 console.error(err);
                 statusText.innerText = "Error saving key to cloud.";
+                statusText.classList.add("error");
                 btn.disabled = false;
-                btn.innerText = "GENERATE NEW KEY";
+                btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> GENERATE KEY`;
             }
         };
 
@@ -314,7 +450,8 @@
 
         window.copyKey = () => {
             navigator.clipboard.writeText(keyBox.innerText);
-            statusText.innerText = "Key copied to clipboard!";
+            statusText.innerText = "✓ Key copied to clipboard!";
+            statusText.classList.remove("error");
             setTimeout(() => statusText.innerText = "", 3000);
         }
     </script>
