@@ -409,34 +409,29 @@
                         <button class="logout-btn" onclick="logout()">Sign Out</button>
                     </div>
 
-                    <!-- No Key -->
-                    <div id="noKeySection">
-                        <p class="info-text">Welcome! You can generate <strong>1 key every 24 hours</strong>. Your key is automatically bound to your PC on first use — no sharing possible.</p>
-                        <button class="btn btn-generate" id="genBtn" onclick="handleGenerate()">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-                            Generate License Key
-                        </button>
+                    <!-- Key Management Dashboard (Luarmor Style) -->
+                    <div id="keyManagerSection" class="hidden">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <div class="key-label" style="margin: 0;">License Dashboard</div>
+                            <button class="btn btn-generate" id="genBtnSmall" onclick="handleGenerate()" style="width: auto; padding: 8px 16px; font-size: 12px; border-radius: 10px;">
+                                + New Key
+                            </button>
+                        </div>
+                        
+                        <div id="keysList" style="display: flex; flex-direction: column; gap: 12px; max-height: 350px; overflow-y: auto; padding-right: 5px; margin-bottom: 20px;">
+                            <!-- Keys will be injected here -->
+                            <div class="info-text">Loading your licenses...</div>
+                        </div>
+
+                        <div class="status" id="statusText"></div>
                     </div>
 
-                    <!-- Active Key -->
-                    <div id="activeKeySection" class="hidden">
-                        <div class="key-wrapper">
-                            <div class="key-label">Your License Key</div>
-                            <div class="key-display" id="keyBox" title="Click to copy" onclick="copyKey()">Connecting...</div>
-                        </div>
-
-                        <div class="timer-bar">
-                            <div class="timer-dot"></div>
-                            <div class="timer-text" id="timerText">Active — Expires in --:--:--</div>
-                        </div>
-
-                        <div class="progress-container">
-                            <div class="progress-fill" id="progressFill" style="width: 100%;"></div>
-                        </div>
-
-                        <button class="btn btn-copy" id="copyBtn" onclick="copyKey()">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                            <span id="copyText">Copy to Clipboard</span>
+                    <!-- No Key (Initial State) -->
+                    <div id="noKeySection" class="hidden">
+                        <p class="info-text">Welcome! Generate your first <strong>12-hour license key</strong> to get started. Each key is locked to your PC on first use.</p>
+                        <button class="btn btn-generate" id="genBtn" onclick="handleGenerate()">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                            Generate First License Key
                         </button>
                     </div>
                 </div>
@@ -513,13 +508,13 @@
         import { getDatabase, ref, set, get, child, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyB-fiGhXqie8nAgHhBliKQNFRvnoge4-90",
-            authDomain: "drk-external.firebaseapp.com",
-            projectId: "drk-external",
-            storageBucket: "drk-external.firebasestorage.app",
-            messagingSenderId: "550880608599",
-            appId: "1:550880608599:web:f5e50b8dc1c15483f03e12",
-            databaseURL: "https://drk-external-default-rtdb.asia-southeast1.firebasedatabase.app/"
+            apiKey: "AIzaSyCAPNx0JzhFC_Ro_nqBue7myCFinhQ7nsA",
+            authDomain: "ez-res.firebaseapp.com",
+            projectId: "ez-res",
+            storageBucket: "ez-res.firebasestorage.app",
+            messagingSenderId: "882594089744",
+            appId: "1:882594089744:web:2847e94788477c3332f395",
+            databaseURL: "https://ez-res-default-rtdb.asia-southeast1.firebasedatabase.app/"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -528,9 +523,8 @@
         const provider = new GoogleAuthProvider();
 
         let currentUser = null;
-        let activeTimer = null;
-        let keyExpiresAt = 0;
-        const KEY_DURATION = 24 * 60 * 60 * 1000;
+        let activeTimers = {};
+        const KEY_DURATION = 12 * 60 * 60 * 1000;
 
         const authPanel = document.getElementById("authPanel");
         const mainPanel = document.getElementById("mainPanel");
@@ -565,34 +559,119 @@
         });
 
         async function checkUserKey() {
-            const dbRef = ref(db);
+            const dbRef = ref(db, 'keys');
             try {
-                const snapshot = await get(child(dbRef, `users/${currentUser.uid}`));
+                const snapshot = await get(child(ref(db), `users/${currentUser.uid}/keys`));
                 if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    if (data.expires_at > Date.now()) {
-                        showKey(data.key, data.expires_at);
-                    } else {
-                        showGenerateSection();
-                    }
+                    loadKeys(snapshot.val());
                 } else {
                     showGenerateSection();
                 }
             } catch (err) { console.error(err); }
         }
 
-        function showKey(key, expiresAt) {
-            keyExpiresAt = expiresAt;
+        async function loadKeys(keyIds) {
+            const keysList = document.getElementById("keysList");
+            keysList.innerHTML = "";
+            
+            const ids = Object.keys(keyIds);
+            if (ids.length === 0) {
+                showGenerateSection();
+                return;
+            }
+
             noKeySection.classList.add("hidden");
-            activeKeySection.classList.remove("hidden");
-            keyBox.innerText = key;
-            startCountdown(expiresAt);
+            document.getElementById("keyManagerSection").classList.remove("hidden");
+
+            for (const id of ids.reverse()) {
+                const keySnap = await get(child(ref(db), `keys/${id}`));
+                if (keySnap.exists()) {
+                    renderKeyItem(id, keySnap.val());
+                }
+            }
+        }
+
+        function renderKeyItem(id, data) {
+            const container = document.getElementById("keysList");
+            const isExpired = data.expires_at < Date.now();
+            const statusColor = isExpired ? "var(--error)" : "var(--success)";
+            
+            const item = document.createElement("div");
+            item.className = "key-item";
+            item.style = `
+                background: rgba(168, 85, 247, 0.04);
+                border: 1px solid rgba(168, 85, 247, 0.1);
+                border-radius: 14px;
+                padding: 14px;
+                margin-bottom: 8px;
+                text-align: left;
+                position: relative;
+                transition: all 0.3s;
+            `;
+            
+            item.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <div>
+                        <div style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--text);">${id}</div>
+                        <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">HWID: <span style="color: ${data.hwid === 'UNBOUND' ? 'var(--text-dim)' : 'var(--accent-blue)'}">${data.hwid}</span></div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 10px; font-weight: 800; color: ${statusColor}; text-transform: uppercase; letter-spacing: 1px;" id="status-${id}">
+                            ${isExpired ? 'Expired' : 'Active'}
+                        </div>
+                        <div style="font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono';" id="timer-${id}"></div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="logout-btn" style="background: rgba(168, 85, 247, 0.1); color: var(--primary-light); border-color: rgba(168, 85, 247, 0.2);" onclick="copyToClipboard('${id}')">Copy</button>
+                    <button class="logout-btn" style="margin: 0;" onclick="handleDelete('${id}')">Delete</button>
+                </div>
+            `;
+            
+            container.appendChild(item);
+            if (!isExpired) startKeyTimer(id, data.expires_at);
+        }
+
+        function startKeyTimer(id, expiresAt) {
+            const timerEl = document.getElementById(`timer-${id}`);
+            if (activeTimers[id]) clearInterval(activeTimers[id]);
+
+            activeTimers[id] = setInterval(() => {
+                const diff = expiresAt - Date.now();
+                if (diff <= 0) {
+                    clearInterval(activeTimers[id]);
+                    timerEl.innerText = "00:00:00";
+                    document.getElementById(`status-${id}`).innerText = "Expired";
+                    document.getElementById(`status-${id}`).style.color = "var(--error)";
+                    return;
+                }
+                const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
+                const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+                const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+                timerEl.innerText = `${h}:${m}:${s}`;
+            }, 1000);
+        }
+
+        window.copyToClipboard = (text) => {
+            navigator.clipboard.writeText(text);
+            statusText.innerText = "Key copied to clipboard!";
+            setTimeout(() => statusText.innerText = "", 2000);
+        }
+
+        window.handleDelete = async (keyId) => {
+            if (!confirm(`Are you sure you want to delete key ${keyId}?`)) return;
+            try {
+                const updates = {};
+                updates[`keys/${keyId}`] = null;
+                updates[`users/${currentUser.uid}/keys/${keyId}`] = null;
+                await update(ref(db), updates);
+                checkUserKey(); // Refresh
+            } catch (err) { console.error(err); }
         }
 
         function showGenerateSection() {
             noKeySection.classList.remove("hidden");
-            activeKeySection.classList.add("hidden");
-            if (activeTimer) clearInterval(activeTimer);
+            document.getElementById("keyManagerSection").classList.add("hidden");
         }
 
         window.handleGenerate = async () => {
@@ -615,9 +694,9 @@
             try {
                 const updates = {};
                 updates[`keys/${newKey}`] = { created_at: now, expires_at: expiresAt, hwid: "UNBOUND", active: true, uid: currentUser.uid };
-                updates[`users/${currentUser.uid}`] = { key: newKey, expires_at: expiresAt };
+                updates[`users/${currentUser.uid}/keys/${newKey}`] = true;
                 await update(ref(db), updates);
-                showKey(newKey, expiresAt);
+                checkUserKey(); // Refresh list
             } catch (err) {
                 console.error(err);
                 statusText.innerText = "Error saving key. Please try again.";
