@@ -718,10 +718,18 @@
                     method: "POST"
                 });
 
-                const verifyData = await verifyRes.json();
+                const responseText = await verifyRes.text();
+                let verifyData;
+                try {
+                    verifyData = JSON.parse(responseText);
+                } catch(e) {
+                    throw new Error("Salting.io returned non-JSON response. Check your Bridge settings.");
+                }
                 
                 if (!verifyData.success) {
-                    throw new Error("Captcha verification failed: " + (verifyData['error-codes'] ? verifyData['error-codes'].join(', ') : 'Unknown Error'));
+                    const errorMsg = verifyData['error-codes'] ? verifyData['error-codes'].join(', ') : 'Verification Failed';
+                    const fullDetails = JSON.stringify(verifyData);
+                    throw new Error(`hCaptcha Error: ${errorMsg} (Details: ${fullDetails})`);
                 }
 
                 // If verified successfully, generate and save the key
