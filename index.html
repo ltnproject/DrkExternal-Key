@@ -7,6 +7,7 @@
     <meta name="description" content="Generate your Drk External license key. Sign in with Google and get instant 24-hour access.">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9926451246356367"
          crossorigin="anonymous"></script>
+    <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
@@ -400,6 +401,9 @@
 
                 <!-- Main Panel -->
                 <div id="mainPanel" class="hidden">
+                    <!-- Invisible hCaptcha -->
+                    <div id="hcaptcha-container" class="h-captcha" data-sitekey="c70af888-efae-46fa-af7a-ebcc721cc3ae" data-size="invisible" data-callback="onCaptchaVerified"></div>
+
                     <div class="user-info">
                         <img id="userImg" src="" alt="User avatar">
                         <div class="user-meta">
@@ -675,9 +679,28 @@
         }
 
         window.handleGenerate = async () => {
+            statusText.innerText = "";
+            statusText.classList.remove("error");
+            
+            try {
+                hcaptcha.execute();
+            } catch (e) {
+                console.error("hCaptcha execution failed", e);
+                statusText.innerText = "Captcha failed to load.";
+                statusText.classList.add("error");
+            }
+        };
+
+        window.onCaptchaVerified = async (token) => {
             const btn = document.getElementById("genBtn");
-            btn.disabled = true;
-            btn.innerHTML = `<svg class="spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Generating...`;
+            const btnSmall = document.getElementById("genBtnSmall");
+            
+            if (btn) btn.disabled = true;
+            if (btnSmall) btnSmall.disabled = true;
+
+            if (btn) {
+                btn.innerHTML = `<svg class="spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Generating...`;
+            }
 
             // Add spin CSS dynamically
             if (!document.getElementById('spinStyle')) {
@@ -687,22 +710,44 @@
                 document.head.appendChild(style);
             }
 
-            const newKey = generateDrkKeyFormat();
-            const now = Date.now();
-            const expiresAt = now + KEY_DURATION;
-
             try {
+                // Verify the hCaptcha token securely using Salting.io
+                const saltingUuid = "f8629429-18b3-40ac-8704-2f627dfeee4e";
+                
+                const verifyRes = await fetch(`https://api.salting.io/r/${saltingUuid}?response=${token}`, {
+                    method: "POST"
+                });
+
+                const verifyData = await verifyRes.json();
+                
+                if (!verifyData.success) {
+                    throw new Error("Captcha verification failed: " + (verifyData['error-codes'] ? verifyData['error-codes'].join(', ') : 'Unknown Error'));
+                }
+
+                // If verified successfully, generate and save the key
+                const newKey = generateDrkKeyFormat();
+                const now = Date.now();
+                const expiresAt = now + KEY_DURATION;
+
                 const updates = {};
                 updates[`keys/${newKey}`] = { created_at: now, expires_at: expiresAt, hwid: "UNBOUND", active: true, uid: currentUser.uid };
                 updates[`users/${currentUser.uid}/keys/${newKey}`] = true;
+                
                 await update(ref(db), updates);
                 checkUserKey(); // Refresh list
+                statusText.innerText = "Key generated successfully!";
+                statusText.classList.remove("error");
             } catch (err) {
                 console.error(err);
-                statusText.innerText = "Error saving key. Please try again.";
+                statusText.innerText = err.message || "Error saving key. Please try again.";
                 statusText.classList.add("error");
-                btn.disabled = false;
-                btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Generate License Key`;
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Generate License Key`;
+                }
+                if (btnSmall) btnSmall.disabled = false;
+                hcaptcha.reset();
             }
         };
 
