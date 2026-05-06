@@ -719,6 +719,7 @@
                 
                 if (!verifyData.success) {
                     const errorMsg = verifyData['error-codes'] ? verifyData['error-codes'].join(', ') : 'Verification Failed';
+                    alert("DEBUG - Raw Response from Salting: " + responseText);
                     throw new Error(`hCaptcha Error: ${errorMsg}`);
                 }
 
